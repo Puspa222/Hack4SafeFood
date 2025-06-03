@@ -1,0 +1,6 @@
+# ignoring .pyc files
+*.pyc
+# ignoring .pyo files
+*.pyo
+# ignoring .pyd files
+*.pyd
