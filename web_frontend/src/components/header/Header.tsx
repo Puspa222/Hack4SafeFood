@@ -3,12 +3,14 @@ import { Logo } from "../Logo";
 
 const Header = () => {
   return (
-    <div className="flex justify-between">
-      <div className=" p-6 bg-gray-800">
+    <header className="bg-[#A8C66C] shadow-md">
+      <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
         <Logo />
+        <div className="text-gray-800 text-lg font-medium">
+          Empowering Nepali Farmers 🌾
+        </div>
       </div>
-      <div className="bg-gray-600">This is Header</div>
-    </div>
+    </header>
   );
 };
 
