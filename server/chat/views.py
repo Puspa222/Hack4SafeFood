@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Chat, Message
 from .serializers import ChatSerializer, MessageSerializer, CreateMessageSerializer
+from .services import chat_service
 
 
 @api_view(['POST'])
@@ -27,15 +28,53 @@ def get_chat_messages(request, chat_id):
 
 @api_view(['POST'])
 def send_message(request):
-    """Send a message to a chat"""
+    """Send a message to a chat and get AI response"""
     serializer = CreateMessageSerializer(data=request.data)
     if serializer.is_valid():
         try:
             # Verify chat exists
             chat = Chat.objects.get(chat_id=serializer.validated_data['chat'].chat_id)
-            message = serializer.save()
-            response_serializer = MessageSerializer(message)
-            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+            
+            # Save user message
+            user_message = serializer.save()
+            
+            # Get chat history for context
+            chat_history = []
+            previous_messages = chat.messages.filter(
+                created_at__lt=user_message.created_at
+            ).order_by('created_at')
+            
+            for msg in previous_messages:
+                chat_history.append({
+                    'role': msg.role,
+                    'message': msg.message
+                })
+            
+            # Process message with Langchain
+            ai_response = chat_service.get_chat_response(
+                message=user_message.message,
+                chat_history=chat_history
+            )
+            
+            # Save AI response
+            ai_message = Message.objects.create(
+                message=ai_response,
+                role='assistant',
+                chat=chat
+            )
+            
+            # Return both messages
+            user_serializer = MessageSerializer(user_message)
+            ai_serializer = MessageSerializer(ai_message)
+            
+            return Response({
+                'user_message': user_serializer.data,
+                'ai_response': ai_serializer.data
+            }, status=status.HTTP_201_CREATED)
+            
         except Chat.DoesNotExist:
             return Response({'error': 'Chat not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': f'Failed to process message: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
