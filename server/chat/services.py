@@ -1,23 +1,23 @@
 import os
 from langchain.schema import HumanMessage, AIMessage
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from typing import List, Dict, Any
 
 
 class ChatService:
     def __init__(self):
         # Initialize the language model
-        # You can replace this with other providers like Ollama for local models
-        api_key = os.getenv('OPENAI_API_KEY')
+        # Using Google Generative AI (Gemini)
+        api_key = os.getenv('GOOGLE_API_KEY')
         
-        if api_key and api_key != 'your_openai_api_key_here':
-            # Use OpenAI if API key is provided
-            self.llm = ChatOpenAI(
-                model="gpt-3.5-turbo",
+        if api_key:
+            # Use Google Generative AI if API key is provided
+            self.llm = ChatGoogleGenerativeAI(
+                model="gemma-3n-e4b-it",
                 temperature=0.7,
-                openai_api_key=api_key
+                google_api_key=api_key
             )
-            self.provider = "openai"
+            self.provider = "google"
         else:
             # Fallback to a mock response for development
             self.llm = None
@@ -28,7 +28,7 @@ class ChatService:
         Process user message and return AI response
         """
         try:
-            if self.provider == "openai" and self.llm:
+            if self.provider == "google" and self.llm:
                 # Convert chat history to langchain format
                 messages = []
                 if chat_history:
@@ -42,12 +42,12 @@ class ChatService:
                 messages.append(HumanMessage(content=message))
                 
                 # Get response from LLM
-                response = self.llm(messages)
+                response = self.llm.invoke(messages)
                 return response.content
             
             else:
                 # Mock response for development/testing
-                return f"This is a mock response to: '{message}'. Please set up your OpenAI API key in .env file for actual AI responses."
+                return f"This is a mock response to: '{message}'. Please set up your Google API key in .env file for actual AI responses."
                 
         except Exception as e:
             # Fallback response in case of error

@@ -91,9 +91,9 @@ Retrieves all messages from a specific chat.
    ```
 
 2. **Configure Environment:**
-   Create a `.env` file and add your OpenAI API key:
+   Create a `.env` file and add your Google API key:
    ```
-   OPENAI_API_KEY=your_openai_api_key_here
+   GOOGLE_API_KEY=your_google_api_key_here
    ```
 
 3. **Run Migrations:**
@@ -133,7 +133,7 @@ Access the admin interface at `/admin/` to manage chats and messages.
 ## Langchain Integration
 
 The system uses Langchain to process messages:
-- Supports OpenAI GPT models (with API key)
+- Supports Google Generative AI (Gemini) models (with API key)
 - Falls back to mock responses for development
 - Maintains conversation context using chat history
 - Customizable system prompts for domain-specific responses
