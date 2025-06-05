@@ -8,3 +8,5 @@ langchain-community
 chromadb
 pypdf
 python-dotenv
+langchain-community
+requests
