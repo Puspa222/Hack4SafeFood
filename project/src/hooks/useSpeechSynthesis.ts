@@ -1,13 +1,12 @@
 import { useCallback, useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { getBestVoice, getOptimalTTSSettings, cleanTextForTTS, checkTTSSupport } from '../utils/ttsUtils';
 
 export function useSpeechSynthesis() {
   const { language } = useLanguage();
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const speak = useCallback((
+  const [error, setError] = useState<string | null>(null);  const speak = useCallback((
     text: string,
     options?: {
       voice?: SpeechSynthesisVoice;
@@ -21,17 +20,31 @@ export function useSpeechSynthesis() {
       return;
     }
 
+    // Cancel any ongoing speech
     window.speechSynthesis.cancel();
 
     try {
-      const utterance = new SpeechSynthesisUtterance(text);
+      // Clean and optimize text for better pronunciation
+      const cleanedText = cleanTextForTTS(text, language);
+      const utterance = new SpeechSynthesisUtterance(cleanedText);
       
+      // Set language based on context
       utterance.lang = language === 'ne' ? 'ne-NP' : 'en-US';
-      utterance.rate = options?.rate ?? 1.0; 
-      utterance.pitch = options?.pitch ?? 1.0; 
-      utterance.volume = options?.volume ?? 1.0; 
       
-      if (options?.voice) {
+      // Get optimal settings for the current language
+      const optimalSettings = getOptimalTTSSettings(language);
+      utterance.rate = options?.rate ?? optimalSettings.rate; 
+      utterance.pitch = options?.pitch ?? optimalSettings.pitch; 
+      utterance.volume = options?.volume ?? optimalSettings.volume;
+      
+      // Try to find the best voice for the language
+      if (!options?.voice) {
+        // Use the utility function to get the best voice
+        const bestVoice = getBestVoice(language);
+        if (bestVoice) {
+          utterance.voice = bestVoice;
+        }
+      } else {
         utterance.voice = options.voice;
       }
 
@@ -136,13 +149,36 @@ export function useSpeechSynthesis() {
       setIsPaused(false);
     }
   }, []);
-
   const getVoices = useCallback(() => {
-    if (window.speechSynthesis) {
-      return window.speechSynthesis.getVoices();
+    if (!('speechSynthesis' in window)) {
+      return [];
     }
-    return [];
-  }, []);
+    
+    const voices = window.speechSynthesis.getVoices();
+    
+    // Filter and sort voices by relevance to the current language
+    if (language === 'ne') {
+      // For Nepali, prioritize voices in this order:
+      // 1. Nepali voices
+      // 2. Hindi voices
+      // 3. Other Indian voices
+      // 4. All other voices
+      return [
+        ...voices.filter(v => v.lang.includes('ne') || v.name.toLowerCase().includes('nepali')),
+        ...voices.filter(v => v.lang.includes('hi') || v.name.toLowerCase().includes('hindi')),
+        ...voices.filter(v => v.lang.includes('hi-IN') || v.lang.includes('en-IN')),
+        ...voices.filter(v => !v.lang.includes('ne') && !v.lang.includes('hi') && !v.lang.includes('hi-IN') && !v.lang.includes('en-IN'))
+      ];
+    } else {
+      // For English, prioritize English voices
+      return [
+        ...voices.filter(v => v.lang.includes('en') && v.localService),
+        ...voices.filter(v => v.lang.includes('en') && !v.localService),
+        ...voices.filter(v => !v.lang.includes('en'))
+      ];
+    }
+  }, [language]);
+  const { isSupported, hasVoices, nepaliSupported } = checkTTSSupport();
 
   return {
     speak,
@@ -153,6 +189,8 @@ export function useSpeechSynthesis() {
     isSpeaking,
     isPaused,
     error,
-    isSupported: 'speechSynthesis' in window
+    isSupported,
+    hasVoices,
+    nepaliSupported
   };
 }
