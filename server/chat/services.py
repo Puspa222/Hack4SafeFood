@@ -1,61 +1,31 @@
 import os
-from langchain.schema import HumanMessage, AIMessage
-from langchain_google_genai import ChatGoogleGenerativeAI
 from typing import List, Dict, Any
+
+from langchain.schema import HumanMessage, AIMessage, SystemMessage
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 
 class ChatService:
     def __init__(self):
-        # Initialize the language model
-        # Using Google Generative AI (Gemini)
+        # Load Google API Key from environment
         api_key = os.getenv('GOOGLE_API_KEY')
-        
+
         if api_key:
-            # Use Google Generative AI if API key is provided
+            # Initialize Gemini model (Google Generative AI)
             self.llm = ChatGoogleGenerativeAI(
-                model="gemma-3-27b-it",
-                temperature=0.7,
+                model="gemini-1.5-flash-002",  # fast + low latency
+                temperature=0.5,  # safer & more consistent than 0.7
                 google_api_key=api_key
             )
             self.provider = "google"
         else:
-            # Fallback to a mock response for development
+            # Development mode with mock responses
             self.llm = None
             self.provider = "mock"
-    
-    def get_chat_response(self, message: str, chat_history: List[Dict[str, Any]] = None) -> str:
-        """
-        Process user message and return AI response
-        """
-        try:
-            if self.provider == "google" and self.llm:
-                # Convert chat history to langchain format
-                messages = []
-                if chat_history:
-                    for msg in chat_history[-10:]:  # Keep last 10 messages for context
-                        if msg['role'] == 'user':
-                            messages.append(HumanMessage(content=msg['message']))
-                        elif msg['role'] == 'assistant':
-                            messages.append(AIMessage(content=msg['message']))
-                
-                # Add current message
-                messages.append(HumanMessage(content=message))
-                
-                # Get response from LLM
-                response = self.llm.invoke(messages)
-                return response.content
-            
-            else:
-                # Mock response for development/testing
-                return f"This is a mock response to: '{message}'. Please set up your Google API key in .env file for actual AI responses."
-                
-        except Exception as e:
-            # Fallback response in case of error
-            return f"I apologize, but I encountered an error processing your message. Error: {str(e)}"
-    
+
     def get_system_prompt(self) -> str:
         """
-        Return system prompt for the AI assistant
+        Return the system prompt defining AI behavior and tone.
         """
         return """You are **KrishiSathi**, a trusted digital agricultural advisor for Nepali farmers, especially those like Ramesh, who rely on spoken conversation because they cannot read or access detailed manuals. Farmers interact with you using voice-to-text systems, and you must respond in simple **Nepali language** using **clear, concise Markdown**. Your role is to provide **safe, government-aligned, culturally appropriate guidance** about food safety, pesticide use, pest control, and seasonal farming practices.
 
@@ -93,6 +63,40 @@ You are not just answering questions. You are a **proactive, agentic guide** who
 Only output spoken-friendly **Nepali Markdown text**—no HTML, no English unless absolutely needed.
 """
 
+    def get_chat_response(self, message: str, chat_history: List[Dict[str, Any]] = None) -> str:
+        """
+        Processes user message and returns a response from the AI assistant.
+        Includes system prompt and chat history for context.
+        """
+        try:
+            if self.provider == "google" and self.llm:
+                messages = []
 
-# Global instance
+                # Add system prompt first
+                messages.append(SystemMessage(content=self.get_system_prompt()))
+
+                # Add last 10 messages from history for context
+                if chat_history:
+                    for msg in chat_history[-10:]:
+                        if msg['role'] == 'user':
+                            messages.append(HumanMessage(content=msg['message']))
+                        elif msg['role'] == 'assistant':
+                            messages.append(AIMessage(content=msg['message']))
+
+                # Add current user message
+                messages.append(HumanMessage(content=message))
+
+                # Invoke the model with full message list
+                response = self.llm.invoke(messages)
+                return response.content
+
+            else:
+                # Fallback for local development
+                return f"यो '{message}' को लागि mock response हो। कृपया .env फाइलमा GOOGLE_API_KEY राखेर असली उत्तर पाउनुहोस्।"
+
+        except Exception as e:
+            return f"माफ गर्नुहोस्, तपाईंको सन्देश प्रक्रियामा त्रुटि भयो। त्रुटि: {str(e)}"
+
+
+# Optional: Global instance (can be used like a singleton)
 chat_service = ChatService()
