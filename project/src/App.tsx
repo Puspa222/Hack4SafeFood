@@ -9,12 +9,14 @@ import { Message } from './types';
 import { Tips } from './components/Tips';
 import { FAQ } from './components/FAQ';
 import { Report } from './components/Report';
+import { chatService } from './services/chatService';
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentView, setCurrentView] = useState<'chat' | 'tips' | 'faq' | 'report'>('chat');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSendMessage = (content: string) => {
+  const handleSendMessage = async (content: string) => {
     const userMessage: Message = {
       id: Date.now().toString(),
       content,
@@ -23,17 +25,34 @@ function App() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      const response = await chatService.sendMessage(content);
+      
       const aiMessage: Message = {
+        id: response.ai_response.message_id,
+        content: response.ai_response.message,
+        role: 'assistant',
+        timestamp: new Date(response.ai_response.created_at),
+      };
+      
+      setMessages((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      
+      // Fallback error message
+      const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: 'This is a simulated AI response. The actual AI integration will be implemented later.',
+        content: 'Sorry, I encountered an error while processing your message. Please make sure the backend server is running and try again.',
         role: 'assistant',
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, aiMessage]);
-    }, 1000);
+      
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
