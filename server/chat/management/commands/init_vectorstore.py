@@ -1,6 +1,6 @@
 import logging
 from django.core.management.base import BaseCommand
-from chat.vector_service import vector_service
+from server.chat.vector_service_new import vector_service
 
 logger = logging.getLogger(__name__)
 

@@ -3,7 +3,7 @@ from typing import List, Dict, Any
 
 from langchain.schema import HumanMessage, AIMessage, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
-from .vector_service import vector_service
+from .vector_service_new import vector_service
 
 
 class ChatService:

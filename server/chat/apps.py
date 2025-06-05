@@ -11,7 +11,7 @@ class ChatConfig(AppConfig):
     def ready(self):
         """Load existing vectorstore when Django app starts (no re-embedding)"""
         try:
-            from .vector_service import vector_service
+            from .vector_service_new import vector_service
             logger.info("Loading existing vectorstore on app startup...")
             # Only load existing vectorstore, don't recreate
             vector_service.load_existing_vectorstore()

@@ -14,7 +14,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'server.settings')
 django.setup()
 
 from chat.translation_service import translation_service
-from chat.vector_service import vector_service
+from server.chat.vector_service_new import vector_service
 
 def test_translation():
     """Test the translation functionality."""

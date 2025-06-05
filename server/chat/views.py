@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from .models import Chat, Message
 from .serializers import ChatSerializer, MessageSerializer, CreateMessageSerializer
 from .services import chat_service
-from .vector_service import vector_service
+from .vector_service_new import vector_service
 
 
 @api_view(['POST'])
