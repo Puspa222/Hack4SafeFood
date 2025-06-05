@@ -45,9 +45,8 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
             }`}
           >
             {disabled ? <Loader2 size={24} className="animate-spin" /> : <SendHorizontal size={24} />}
-          </button>
-        </div>
-        <VoiceButton onTranscript={setInput} />
+          </button>        </div>
+        <VoiceButton onTranscript={setInput} disabled={disabled} />
       </div>
     </form>
   );
