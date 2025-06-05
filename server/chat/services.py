@@ -13,8 +13,8 @@ class ChatService:
         if api_key:
             # Initialize Gemini model (Google Generative AI)
             self.llm = ChatGoogleGenerativeAI(
-                model="gemini-1.5-flash-002",  # fast + low latency
-                temperature=0.5,  # safer & more consistent than 0.7
+                model="gemini-1.5-flash-002",  
+                temperature=0.5, 
                 google_api_key=api_key
             )
             self.provider = "google"
@@ -98,5 +98,4 @@ Only output spoken-friendly **Nepali Markdown text**—no HTML, no English unles
             return f"माफ गर्नुहोस्, तपाईंको सन्देश प्रक्रियामा त्रुटि भयो। त्रुटि: {str(e)}"
 
 
-# Optional: Global instance (can be used like a singleton)
 chat_service = ChatService()

@@ -21,23 +21,20 @@ export function useSpeechSynthesis() {
       return;
     }
 
-    // Cancel any ongoing speech
     window.speechSynthesis.cancel();
 
     try {
       const utterance = new SpeechSynthesisUtterance(text);
       
-      // Configure utterance based on Web Speech API specification
       utterance.lang = language === 'ne' ? 'ne-NP' : 'en-US';
-      utterance.rate = options?.rate ?? 1.0; // Default rate
-      utterance.pitch = options?.pitch ?? 1.0; // Default pitch
-      utterance.volume = options?.volume ?? 1.0; // Default volume
+      utterance.rate = options?.rate ?? 1.0; 
+      utterance.pitch = options?.pitch ?? 1.0; 
+      utterance.volume = options?.volume ?? 1.0; 
       
       if (options?.voice) {
         utterance.voice = options.voice;
       }
 
-      // Event handlers as per Web Speech API spec
       utterance.onstart = () => {
         setIsSpeaking(true);
         setIsPaused(false);
@@ -53,7 +50,6 @@ export function useSpeechSynthesis() {
         setIsSpeaking(false);
         setIsPaused(false);
         
-        // Handle different error types as per spec
         switch (event.error) {
           case 'canceled':
             setError('Speech was canceled');
@@ -105,16 +101,13 @@ export function useSpeechSynthesis() {
       };
 
       utterance.onmark = (event) => {
-        // Handle SSML mark events if needed
         console.log('Mark reached:', event.name);
       };
 
       utterance.onboundary = (event) => {
-        // Handle word/sentence boundary events if needed
         console.log('Boundary reached:', event.name, 'at character', event.charIndex);
       };
 
-      // Start speaking
       window.speechSynthesis.speak(utterance);
 
     } catch (err) {
