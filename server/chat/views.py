@@ -177,3 +177,43 @@ def vectorstore_status(request):
             'error': str(e),
             'embeddings_available': vector_service.embeddings is not None
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+def test_search(request):
+    """Test search with detailed logging for debugging"""
+    query = request.data.get('query', '')
+    max_docs = request.data.get('max_docs', 10)
+    
+    if not query:
+        return Response(
+            {'error': 'Query is required'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        # Use test search method with detailed logging
+        results = vector_service.test_search(query, k=max_docs)
+        
+        formatted_results = []
+        for doc, score in results:
+            formatted_results.append({
+                'content': doc.page_content,
+                'source': doc.metadata.get('source', 'Unknown'),
+                'page': doc.metadata.get('page', 0),
+                'similarity_score': score,
+                'metadata': doc.metadata
+            })
+        
+        return Response({
+            'query': query,
+            'results': formatted_results,
+            'total_found': len(formatted_results),
+            'debug': True
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response(
+            {'error': f'Test search failed: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

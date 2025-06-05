@@ -74,6 +74,37 @@ class VectorService:
         """Split documents into smaller chunks for better retrieval."""
         return self.text_splitter.split_documents(documents)
 
+    def load_existing_vectorstore(self) -> bool:
+        """Load existing vectorstore without re-embedding documents."""
+        if not self.embeddings:
+            logger.error("No embeddings available. Cannot load vectorstore.")
+            return False
+        
+        try:
+            if self.persist_directory.exists():
+                logger.info("Loading existing vectorstore from disk...")
+                self.vectorstore = Chroma(
+                    persist_directory=str(self.persist_directory),
+                    embedding_function=self.embeddings
+                )
+                
+                # Check if vectorstore has documents
+                collection = self.vectorstore._collection
+                doc_count = collection.count()
+                if doc_count > 0:
+                    logger.info(f"Vectorstore loaded successfully with {doc_count} documents")
+                    return True
+                else:
+                    logger.warning("Existing vectorstore is empty")
+                    return False
+            else:
+                logger.warning("No existing vectorstore found. Run initialization to create one.")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error loading existing vectorstore: {str(e)}")
+            return False
+
     def create_vectorstore(self, force_recreate: bool = False) -> bool:
         """Create or load the ChromaDB vectorstore."""
         if not self.embeddings:
@@ -130,8 +161,10 @@ class VectorService:
     def similarity_search(self, query: str, k: int = 4) -> List[Document]:
         """Perform similarity search on the vectorstore."""
         if not self.vectorstore:
-            logger.warning("Vectorstore not initialized")
-            return []
+            logger.warning("Vectorstore not initialized, attempting to load existing...")
+            if not self.load_existing_vectorstore():
+                logger.error("Failed to load vectorstore")
+                return []
         
         try:
             results = self.vectorstore.similarity_search(query, k=k)
@@ -144,22 +177,58 @@ class VectorService:
     def similarity_search_with_score(self, query: str, k: int = 4) -> List[tuple]:
         """Perform similarity search with relevance scores."""
         if not self.vectorstore:
-            logger.warning("Vectorstore not initialized")
-            return []
+            logger.warning("Vectorstore not initialized, attempting to load existing...")
+            if not self.load_existing_vectorstore():
+                logger.error("Failed to load vectorstore")
+                return []
         
         try:
             results = self.vectorstore.similarity_search_with_score(query, k=k)
-            logger.info(f"Found {len(results)} similar documents with scores")
+            logger.info(f"Found {len(results)} similar documents with scores for query: '{query[:50]}...'")
+            
+            # Log the scores for debugging
+            for i, (doc, score) in enumerate(results):
+                logger.debug(f"Result {i+1}: Score={score:.4f}, Content preview: {doc.page_content[:100]}...")
+            
             return results
         except Exception as e:
             logger.error(f"Error performing similarity search with scores: {str(e)}")
             return []
 
+    def test_search(self, query: str, k: int = 10) -> List[tuple]:
+        """Test search with detailed logging for debugging."""
+        logger.info(f"Testing search with query: '{query}'")
+        
+        if not self.vectorstore:
+            logger.warning("Vectorstore not initialized, attempting to load...")
+            if not self.load_existing_vectorstore():
+                logger.error("Failed to load vectorstore")
+                return []
+        
+        try:
+            # Get all results without score filtering
+            results = self.vectorstore.similarity_search_with_score(query, k=k)
+            logger.info(f"Raw search returned {len(results)} results")
+            
+            for i, (doc, score) in enumerate(results):
+                logger.info(f"Result {i+1}:")
+                logger.info(f"  Score: {score:.6f}")
+                logger.info(f"  Source: {doc.metadata.get('source', 'Unknown')}")
+                logger.info(f"  Content (first 200 chars): {doc.page_content[:200]}...")
+                logger.info("  ---")
+            
+            return results
+        except Exception as e:
+            logger.error(f"Error in test search: {str(e)}")
+            return []
+
     def get_retriever(self, search_kwargs: Optional[Dict[str, Any]] = None):
         """Get a retriever object for use with chains."""
         if not self.vectorstore:
-            logger.warning("Vectorstore not initialized")
-            return None
+            logger.warning("Vectorstore not initialized, attempting to load existing...")
+            if not self.load_existing_vectorstore():
+                logger.error("Failed to load vectorstore")
+                return None
         
         if search_kwargs is None:
             search_kwargs = {"k": 4}
