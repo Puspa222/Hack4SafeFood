@@ -74,15 +74,9 @@ function App() {
         timestamp: new Date(),
       };
       
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
+      setMessages((prev) => [...prev, errorMessage]);    } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleNewChat = () => {
-    chatService.resetChat();
-    setMessages([]);
   };
 
   return (
@@ -96,31 +90,20 @@ function App() {
           </div>          {currentView === 'chat' && (
             <>
               <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4 min-h-[60vh] sm:min-h-[500px] flex flex-col">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-semibold text-gray-800">
-                    Chat {chatService.getCurrentChatId() ? `(ID: ${chatService.getCurrentChatId()?.slice(0, 8)}...)` : ''}
-                  </h2>
-                  <button
-                    onClick={handleNewChat}
-                    className="px-4 py-2 text-sm bg-[#2E7D32] text-white rounded-lg hover:bg-[#1B5E20] transition-colors"
-                  >
-                    New Chat
-                  </button>
-                </div>
                 <div className="flex-1 overflow-y-auto space-y-4">
-                  {isInitialLoading ? (
+                    {isInitialLoading ? (
                     <div className="flex justify-center items-center h-32">
-                      <div className="text-gray-500">Loading conversation...</div>
+                      <div className="text-gray-500">कुराकानी लोड गर्दै...</div>
                     </div>
-                  ) : messages.length === 0 ? (
+                    ) : messages.length === 0 ? (
                     <div className="flex justify-center items-center h-32">
-                      <div className="text-gray-500">Start a conversation about food safety!</div>
+                      <div className="text-gray-500">खाना सुरक्षाको बारेमा कुराकानी सुरु गर्नुहोस्!</div>
                     </div>
-                  ) : (
+                    ) : (
                     messages.map((message) => (
                       <ChatMessage key={message.id} message={message} />
                     ))
-                  )}
+                    )}
                 </div>
               </div>
               <ChatInput onSend={handleSendMessage} disabled={isLoading} />
