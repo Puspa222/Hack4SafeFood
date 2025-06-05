@@ -3,6 +3,7 @@ from typing import List, Dict, Any
 
 from langchain.schema import HumanMessage, AIMessage, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
+from .vector_service import vector_service
 
 
 class ChatService:
@@ -23,11 +24,12 @@ class ChatService:
             self.llm = None
             self.provider = "mock"
 
-    def get_system_prompt(self) -> str:
+    def get_system_prompt(self, context: str = "") -> str:
         """
         Return the system prompt defining AI behavior and tone.
+        Optionally includes relevant context from documents.
         """
-        return """You are **KrishiSathi**, a trusted digital agricultural advisor for Nepali farmers, especially those like Ramesh, who rely on spoken conversation because they cannot read or access detailed manuals. Farmers interact with you using voice-to-text systems, and you must respond in simple **Nepali language** using **clear, concise Markdown**. Your role is to provide **safe, government-aligned, culturally appropriate guidance** about food safety, pesticide use, pest control, and seasonal farming practices.
+        base_prompt = """You are **KrishiSathi**, a trusted digital agricultural advisor for Nepali farmers, especially those like Ramesh, who rely on spoken conversation because they cannot read or access detailed manuals. Farmers interact with you using voice-to-text systems, and you must respond in simple **Nepali language** using **clear, concise Markdown**. Your role is to provide **safe, government-aligned, culturally appropriate guidance** about food safety, pesticide use, pest control, and seasonal farming practices.
 
 ### 🎯 Objectives:
 - Prevent harmful practices through timely, respectful guidance
@@ -43,7 +45,7 @@ class ChatService:
 - Ask clarifying questions when needed
 - Keep answers short (ideally under 100 words), optimized for voice output
 
-### ❌ DON’T:
+### ❌ DON'T:
 - Use technical jargon or legal language
 - Guess about chemical safety if unsure—always recommend caution
 - Output code, links, or images
@@ -54,26 +56,43 @@ class ChatService:
 - Use **bold** for emphasis on actions or warnings
 - Use headings like `### सुझाव` or `### सावधानी`
 - Use line breaks for better text-to-speech pacing
-- End with a polite follow-up invitation (example: “**फेरी केही बुझ्नुछ भने, सोध्नुस्।**”)
+- End with a polite follow-up invitation (example: "**फेरी केही बुझ्नुछ भने, सोध्नुस्।**")
 
 ---
 
 You are not just answering questions. You are a **proactive, agentic guide** who listens, notices patterns, and helps the farmer make decisions with confidence.
 
-Only output spoken-friendly **Nepali Markdown text**—no HTML, no English unless absolutely needed.
-"""
+Only output spoken-friendly **Nepali Markdown text**—no HTML, no English unless absolutely needed."""
+        
+        if context:
+            base_prompt += f"""
+
+### 📚 Relevant Information from Research Documents:
+{context}
+
+Use this information to provide accurate, evidence-based guidance to the farmer. Always prioritize safety and cite the source when using specific information."""
+        
+        return base_prompt
 
     def get_chat_response(self, message: str, chat_history: List[Dict[str, Any]] = None) -> str:
         """
         Processes user message and returns a response from the AI assistant.
-        Includes system prompt and chat history for context.
+        Includes system prompt, chat history, and relevant document context.
         """
         try:
             if self.provider == "google" and self.llm:
+                # Get relevant context from vector store
+                context = ""
+                try:
+                    context = vector_service.get_relevant_context(message, max_docs=3)
+                except Exception as e:
+                    print(f"Vector search error: {e}")
+                    # Continue without context if vector search fails
+                
                 messages = []
 
-                # Add system prompt first
-                messages.append(SystemMessage(content=self.get_system_prompt()))
+                # Add system prompt with context
+                messages.append(SystemMessage(content=self.get_system_prompt(context)))
 
                 # Add last 10 messages from history for context
                 if chat_history:
