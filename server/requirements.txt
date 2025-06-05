@@ -10,3 +10,4 @@ pypdf
 python-dotenv
 langchain-community
 requests
+duckduckgo-search

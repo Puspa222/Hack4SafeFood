@@ -151,7 +151,7 @@ class VectorService:
             logger.error(f"Error creating vectorstore: {str(e)}")
             return False
 
-    def similarity_search(self, query: str, k: int = 4) -> List[Document]:
+    def similarity_search(self, query: str, k: int = 3) -> List[Document]:
         """Perform similarity search on the vectorstore."""
         if not self.vectorstore:
             logger.warning("Vectorstore not initialized, attempting to load existing...")
@@ -172,7 +172,7 @@ class VectorService:
             logger.error(f"Error performing similarity search: {str(e)}")
             return []
 
-    def similarity_search_with_score(self, query: str, k: int = 4) -> List[tuple]:
+    def similarity_search_with_score(self, query: str, k: int = 3) -> List[tuple]:
         """Perform similarity search with relevance scores."""
         if not self.vectorstore:
             logger.warning("Vectorstore not initialized, attempting to load existing...")
@@ -198,7 +198,7 @@ class VectorService:
             logger.error(f"Error performing similarity search with scores: {str(e)}")
             return []
 
-    def test_search(self, query: str, k: int = 10) -> List[tuple]:
+    def test_search(self, query: str, k: int = 5) -> List[tuple]:
         """Test search with detailed logging for debugging."""
         logger.info(f"Testing search with query: '{query}'")
         
