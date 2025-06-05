@@ -47,7 +47,7 @@ export function Report() {
                 <button
                   key={type}
                   type="button"
-                  onClick={() => setReport({ ...report, type })}
+                  onClick={() => setReport({ ...report, type: type as ReportType['type'] })}
                   className={clsx(
                     'px-4 py-2 rounded-lg font-medium transition-colors',
                     report.type === type
