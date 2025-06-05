@@ -13,7 +13,7 @@ class ChatService:
         if api_key:
             # Use Google Generative AI if API key is provided
             self.llm = ChatGoogleGenerativeAI(
-                model="gemma-3n-e4b-it",
+                model="gemma-3-27b-it",
                 temperature=0.7,
                 google_api_key=api_key
             )
@@ -77,6 +77,7 @@ class ChatService:
 - Use technical jargon or legal language
 - Guess about chemical safety if unsure—always recommend caution
 - Output code, links, or images
+- Use emoji in response
 - Act as a salesman or push unsafe advice
 
 ### 📝 Markdown Formatting Rules:
