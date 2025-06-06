@@ -33,7 +33,7 @@ class VectorService:
         self.vectorstore = None
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=3000,
-            chunk_overlap=300,
+            chunk_overlap=500,
             length_function=len,
         )
 
