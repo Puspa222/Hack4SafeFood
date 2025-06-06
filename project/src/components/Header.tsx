@@ -11,14 +11,17 @@ export function Header() {
       <div className="flex items-center justify-between max-w-4xl mx-auto">
         <div className="flex items-center gap-2 sm:gap-3">
           <Sprout size={28} className="sm:size-8 text-[#FF9800]" />
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold">
-              {translations.welcome[language]}
-            </h1>
-            <p className="text-xs sm:text-sm opacity-90">
-              {translations.subtitle[language]}
-            </p>
+          <div className="text-lg sm:text-xl font-extrabold text-[#FF9800] tracking-wide">
+            {translations.brand[language]}
           </div>
+        </div>
+        <div className="text-right">
+          <h1 className="text-xl sm:text-2xl font-bold">
+            {translations.welcome[language]}
+          </h1>
+          <p className="text-xs sm:text-sm opacity-90">
+            {translations.subtitle[language]}
+          </p>
         </div>
       </div>
     </header>

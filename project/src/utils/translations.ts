@@ -9,6 +9,10 @@ export const translations: Translation = {
     en: 'Your Agriculture Companion',
     ne: 'तपाईंको कृषि साथी'
   },
+  brand:{
+    en:"KrishiSathi",
+    ne:"कृषि साथी",
+  },
   inputPlaceholder: {
     en: 'Ask a question or speak...',
     ne: 'सोध्नुस् वा आवाजमा भन्नुहोस्...'
